@@ -1,5 +1,5 @@
 /*
- * DropKick 1.3.1
+ * DropKick 1.3
  *
  * Highly customizable <select> lists
  * https://github.com/robdel12/DropKick
@@ -246,7 +246,7 @@
     },
 
     // Turn the dropdownTemplate into a jQuery object and fill in the variables.
-    build = function (tpl, view) {
+    build = function (tpl, view, settings) {
       var
         // Template for the dropdown
         template  = tpl.replace('{{ id }}', view.id).replace('{{ label }}', view.label).replace('{{ tabindex }}', view.tabindex),
@@ -269,8 +269,13 @@
           oTemplate = optionTemplate.replace('{{ value }}', $option.val())
                                     .replace('{{ current }}', (notBlank($option.val()) === view.value) ? 'dk_option_current' : '')
                                     .replace('{{ disabled }}', ($option.attr('disabled') !== undefined) ? 'disabled' : '')
-                                    .replace('{{ text }}', $option.html())
+                                    .replace('{{ text }}', $option.text())
           ;
+
+          // a hook to allow users to further manipulate the rendered options.
+          if (typeof settings.afterOptionBuild !== 'undefined') {
+            oTemplate = settings.afterOptionBuild(oTemplate, $option);
+          }
 
           options[options.length] = oTemplate;
         }
@@ -339,7 +344,7 @@
       data.options   = $options;
 
       // Build the dropdown HTML
-      $dk = build(dropdownTemplate, data);
+      $dk = build(dropdownTemplate, data, settings);
 
       // Make the dropdown fixed width if desired
       $dk.find('.dk_toggle').css({
@@ -524,7 +529,7 @@
     $(document).on('click', null, function (e) {
       if ($opened && $(e.target).closest(".dk_container").length === 0 ) {
         closeDropdown($opened); // Improves performance by minimizing DOM Traversal Operations
-      } else if ($(e.target).is(".dk_toggle, .dk_label")) {
+      } else if ($(e.target).is(".dk_toggle, .dk_label") || $(e.target).parent().is(".dk_toggle, .dk_label")) {
         var $dk = $(e.target).parents('.dk_container').first();
 
         if ($dk.hasClass('dk_open')) {
